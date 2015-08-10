@@ -2,8 +2,7 @@
 ##############################################################################
 #
 #    Odoo, Open Source Management Solution
-#    This module copyright (C) 2010 - 2014 Savoir-faire Linux
-#    (<http://www.savoirfairelinux.com>).
+#    Copyright (C) 2010-2015 Eezee-It (<http://www.eezee-it.com>).
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as
@@ -45,8 +44,8 @@ def github(func):
 class RunbotBranch(models.Model):
     _inherit = "runbot.branch"
 
-    @github
     @api.multi
+    @github
     def _get_pull_info(self):
         self.ensure_one()
         repo = self.repo_id
@@ -66,3 +65,4 @@ class RunbotBranch(models.Model):
         self.ensure_one()
 
         return GithubHosting.get_branch_url(owner, repository, pull_number)
+        raise NotImplementedError("Should have implemented this")

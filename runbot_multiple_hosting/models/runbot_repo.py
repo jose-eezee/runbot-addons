@@ -2,8 +2,7 @@
 ##############################################################################
 #
 #    Odoo, Open Source Management Solution
-#    This module copyright (C) 2010 - 2014 Savoir-faire Linux
-#    (<http://www.savoirfairelinux.com>).
+#    Copyright (C) 2010-2015 Eezee-It (<http://www.eezee-it.com>).
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as
@@ -43,19 +42,7 @@ class RunbotRepoDep(models.Model):
 class RunbotRepo(models.Model):
     _inherit = "runbot.repo"
 
-    @api.model
-    def _get_hosting(self):
-        """
-        Return a list of hosting available for Runbot
-
-        Inherit this method to add a new hosting
-        :return: A list of hosting
-        """
-
-        hosting = []
-        return hosting
-
-    hosting = fields.Selection('_get_hosting', string='Hosting', required=True)
+    hosting = fields.Selection([], string='Hosting', required=True)
     username = fields.Char('Username')
     password = fields.Char('Password')
     dependency_nested_ids = fields.One2many('runbot.repo.dep', 'repo_src_id', string='Nested Dependency')

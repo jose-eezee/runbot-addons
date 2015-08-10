@@ -9,7 +9,7 @@
 
                 <field name="dependency_ids" position="after">
                     <field name="dependency_nested_ids">
-                        <tree>
+                        <tree editable="True">
                             <field name="repo_dst_id" />
                             <field name="reference" />
                         </tree>

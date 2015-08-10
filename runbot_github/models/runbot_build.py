@@ -2,8 +2,7 @@
 ##############################################################################
 #
 #    Odoo, Open Source Management Solution
-#    This module copyright (C) 2010 - 2014 Savoir-faire Linux
-#    (<http://www.savoirfairelinux.com>).
+#    Copyright (C) 2010-2015 Eezee-It (<http://www.eezee-it.com>).
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as
@@ -44,7 +43,7 @@ def github(func):
 class RunbotBuild(models.Model):
     _inherit = "runbot.build"
 
-    @github
     @api.multi
+    @github
     def github_status(self):
-        return runbot_build.github_status()
+        return super(RunbotBuild, self).github_status()

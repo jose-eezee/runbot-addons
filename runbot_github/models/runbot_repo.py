@@ -2,8 +2,7 @@
 ##############################################################################
 #
 #    Odoo, Open Source Management Solution
-#    This module copyright (C) 2010 - 2014 Savoir-faire Linux
-#    (<http://www.savoirfairelinux.com>).
+#    Copyright (C) 2010-2015 Eezee-It (<http://www.eezee-it.com>).
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as
@@ -21,9 +20,7 @@
 ##############################################################################
 import re
 
-from openerp import models, api
-
-from openerp.addons.runbot_multiple_hosting.models import runbot_repo
+from openerp import models, api, fields
 
 from .github import GithubHosting
 
@@ -46,18 +43,13 @@ def github(func):
     return github
 
 
-class RunbotRepo(runbot_repo.RunbotRepo):
+class RunbotRepo(models.Model):
     _inherit = "runbot.repo"
 
-    @api.model
-    def _get_hosting(self):
-        result = super(RunbotRepo, self)._get_hosting()
+    hosting = fields.Selection(selection_add=[('github', 'GitHub')])
 
-        result.append(('github', 'GitHub'))
-        return result
-
-    @github
     @api.multi
+    @github
     def get_pull_request(self, pull_number):
         self.ensure_one()
         match = re.search('([^/]+)/([^/]+)/([^/.]+(.git)?)', self.base)

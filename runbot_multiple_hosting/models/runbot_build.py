@@ -2,8 +2,7 @@
 ##############################################################################
 #
 #    Odoo, Open Source Management Solution
-#    This module copyright (C) 2010 - 2014 Savoir-faire Linux
-#    (<http://www.savoirfairelinux.com>).
+#    Copyright (C) 2010-2015 Eezee-It (<http://www.eezee-it.com>).
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as
@@ -41,7 +40,7 @@ class RunbotBuild(models.Model):
         result = super(RunbotBuild, self).checkout()
         for build in self:
             for extra_repo in build.repo_id.dependency_nested_ids:
-                extra_repo.repository_id.git_export(extra_repo.reference, build.path())
+                extra_repo.repo_dst_id.git_export(extra_repo.reference, build.path())
 
             modules_to_move = [
                 os.path.dirname(module)

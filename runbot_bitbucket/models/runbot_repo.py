@@ -2,8 +2,7 @@
 ##############################################################################
 #
 #    Odoo, Open Source Management Solution
-#    This module copyright (C) 2010 - 2014 Savoir-faire Linux
-#    (<http://www.savoirfairelinux.com>).
+#    Copyright (C) 2010-2015 Eezee-It (<http://www.eezee-it.com>).
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as
@@ -21,7 +20,7 @@
 ##############################################################################
 import re
 
-from openerp import models, api
+from openerp import models, api, fields
 
 from .bitbucket import BitBucketHosting
 
@@ -47,15 +46,12 @@ def bitbucket(func):
 class RunbotRepo(models.Model):
     _inherit = "runbot.repo"
 
-    @api.model
-    def _get_hosting(self):
-        result = super(RunbotRepo, self)._get_hosting()
+    hosting = fields.Selection(selection_add=[('bitbucket', 'Bitbucket')])
 
-        result.append(('bitbucket', 'Bitbucket'))
-        return result
-
+    @api.multi
     @bitbucket
     def get_pull_request(self, pull_number):
+        self.ensure_one()
         match = re.search('([^/]+)/([^/]+)/([^/.]+(.git)?)', self.base)
 
         if match:
