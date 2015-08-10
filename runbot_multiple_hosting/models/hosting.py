@@ -1,7 +1,8 @@
+import requests
+
 class Hosting(object):
     def __init__(self, token):
         self.session = requests.Session()
-        self.session.auth = token
 
     @classmethod
     def get_api_url(cls, endpoint):
