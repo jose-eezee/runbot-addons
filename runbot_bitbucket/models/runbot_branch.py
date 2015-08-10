@@ -55,5 +55,13 @@ class RunbotBranch(models.Model):
         repo = self.repo_id
         if repo.username and repo.password and self.name.startswith('refs/pull/'):
             pull_number = self.name[len('refs/pull/'):]
-            return repo.get_pull_request_branch('/repos/:owner/:repo/pulls/%s' % pull_number) or {}
+            return repo.get_pull_request(pull_number) or {}
         return {}
+
+    @api.one
+    def get_pull_request_url(self, owner, repository, branch):
+        raise NotImplementedError("Should have implemented this")
+
+    @api.one
+    def get_branch_url(self, owner, repository, pull_number):
+        raise NotImplementedError("Should have implemented this")

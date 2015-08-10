@@ -44,24 +44,6 @@ def bitbucket(func):
     return bitbucket
 
 
-class BitBucketHosting(runbot_repo.Hosting):
-    API_URL = 'https://bitbucket.org/api/2.0'
-    URL = 'https://bitbucket.org'
-
-    def __init__(self, credentials):
-        super(BitBucketHosting, self).__init__(credentials)
-
-    def get_pull_request(self, owner, repository, pull_number):
-        url = self.get_api_url('/repositories/%s/%s/pullrequests/%s' % (owner, repository, pull_number))
-        reponse = self.session.get(url)
-        return reponse.json()
-
-    def get_pull_request_branch(self, owner, repository, pull_number):
-        pr = self.get_pull_request(owner, repository, pull_number)
-        return pr['source']['branch']['name']
-
-
-
 class RunbotRepo(models.Model):
     _inherit = "runbot.repo"
 
@@ -72,9 +54,7 @@ class RunbotRepo(models.Model):
         result.append(('bitbucket', 'Bitbucket'))
 
     @bitbucket
-    @api.multi
-    def get_pull_request_branch(self, pull_number):
-        self.ensure_one()
+    def get_pull_request(self, pull_number):
         match = re.search('([^/]+)/([^/]+)/([^/.]+(.git)?)', self.base)
 
         if match:
@@ -83,7 +63,7 @@ class RunbotRepo(models.Model):
 
             hosting = BitBucketHosting((self.username, self.password))
 
-            return hosting.get_pull_request_branch(owner, repository, pull_number)
+            return hosting.get_pull_request(owner, repository, pull_number)
 
 
     @bitbucket

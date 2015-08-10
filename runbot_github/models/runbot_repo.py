@@ -23,8 +23,6 @@ import re
 
 from openerp import models, api
 
-from openerp.addons.runbot_multiple_hosting import runbot_repo
-
 import logging
 
 _logger = logging.getLogger(__name__)
@@ -44,30 +42,6 @@ def github(func):
     return github
 
 
-class GithubHosting(runbot_repo.Hosting):
-    API_URL = 'https://api.github.com'
-    URL = 'https://github.com'
-
-    def __init__(self, credentials):
-        token = (credentials, 'x-oauth-basic')
-        super(GithubHosting, self).__init__(token)
-
-        self.session.headers.update({'Accept': 'application/vnd.github.she-hulk-preview+json'})
-
-    def get_pull_request(self, owner, repository, pull_number):
-        url = self.get_api_url('/repos/%s/%s/pulls/%s' % (owner, repository, pull_number))
-        response = self.session.get(url)
-        return response.json()
-
-    def get_pull_request_branch(self, owner, repository, pull_number):
-        pr = self.get_pull_request(owner, repository, pull_number)
-        return pr['base']['ref']
-
-    def update_status_on_commit(self, owner, repository, commit_hash, status):
-        url = self.get_api_url('/repos/%s/%s/statuses/%s' % (owner, repository, commit_hash))
-        self.session.post(url, status)
-
-
 class RunbotRepo(models.Model):
     _inherit = "runbot.repo"
 
@@ -79,7 +53,7 @@ class RunbotRepo(models.Model):
 
     @github
     @api.multi
-    def get_pull_request_branch(self, pull_number):
+    def get_pull_request(self, pull_number):
         self.ensure_one()
         match = re.search('([^/]+)/([^/]+)/([^/.]+(.git)?)', self.base)
 
@@ -89,7 +63,7 @@ class RunbotRepo(models.Model):
 
             hosting = GithubHosting((self.username, self.password))
 
-            return hosting.get_pull_request_branch(owner, repository, pull_number)
+            return hosting.get_pull_request(owner, repository, pull_number)
 
     @github
     @api.one

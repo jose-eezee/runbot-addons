@@ -45,15 +45,23 @@ class RunbotBranch(models.Model):
 
         for branch in self:
             owner, repository = branch.repo_id.base.split('/')[1:]
-            mapping = branch.repo_id.get_hosting_instance()
 
             if is_pull_request(branch.branch_name):
-                r[branch.id] = mapping.get_pull_request_url(owner, repository, branch.branch_name)
+                # The API one return
+                r[branch.id] = branch.get_pull_request_url(owner, repository, branch.branch_name)
             else:
-                r[branch.id] = mapping.get_branch_url(owner, repository, branch.branch_name)
+                r[branch.id] = branch.get_branch_url(owner, repository, branch.branch_name)
 
         return r
 
     @api.multi
     def _get_pull_info(self):
+        raise NotImplementedError("Should have implemented this")
+
+    @api.multi
+    def get_pull_request_url(self, owner, repository, branch):
+        raise NotImplementedError("Should have implemented this")
+
+    @api.multi
+    def get_branch_url(self, owner, repository, pull_number):
         raise NotImplementedError("Should have implemented this")

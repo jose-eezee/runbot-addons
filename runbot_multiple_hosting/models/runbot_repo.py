@@ -32,24 +32,6 @@ _logger = logging.getLogger(__name__)
 _logger.setLevel(logging.DEBUG)
 
 
-class Hosting(object):
-    def __init__(self, token):
-        self.session = requests.Session()
-        self.session.auth = token
-
-    @classmethod
-    def get_api_url(cls, endpoint):
-        return '%s%s' % (cls.API_URL, endpoint)
-
-    @classmethod
-    def get_url(cls, endpoint, *args):
-        tmp_endpoint = endpoint % tuple(args)
-        return '%s%s' % (cls.URL, tmp_endpoint)
-
-    def update_status_on_commit(self, owner, repository, commit_hash, status):
-        raise NotImplementedError("Should have implemented this")
-
-
 class RunbotRepoDep(models.Model):
     _name = 'runbot.repo.dep'
 
@@ -76,11 +58,10 @@ class RunbotRepo(models.Model):
     hosting = fields.Selection(_get_hosting, string='Hosting', required=True)
     username = fields.Char('Username')
     password = fields.Char('Password')
-    visible = fields.Boolean('Visible on the web interface of Runbot')
     dependency_nested_ids = fields.One2many('runbot.repo.dep', 'repo_src_id', string='Nested Dependency')
 
     @api.multi
-    def get_pull_request_branch(self, pull_number):
+    def get_pull_request(self, pull_number):
         raise NotImplementedError("Should have implemented this")
 
     @api.one

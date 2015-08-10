@@ -19,12 +19,9 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-import requests
-import re
-import os
-import urlparse
-
 from openerp import models, api, fields
+
+from .github import GithubHosting
 
 import logging
 
@@ -55,5 +52,17 @@ class RunbotBranch(models.Model):
         repo = self.repo_id
         if repo.token and self.name.startswith('refs/pull/'):
             pull_number = self.name[len('refs/pull/'):]
-            return repo.get_pull_request_branch('/repos/:owner/:repo/pulls/%s' % pull_number) or {}
+            return repo.get_pull_request(pull_number) or {}
         return {}
+
+    @api.multi
+    def get_pull_request_url(self, owner, repository, branch):
+        self.ensure_one()
+
+        return GithubHosting.get_pull_request_url(owner, repository, branch)
+
+    @api.multi
+    def get_branch_url(self, owner, repository, pull_number):
+        self.ensure_one()
+
+        return GithubHosting.get_branch_url(owner, repository, pull_number)
