@@ -23,7 +23,7 @@ import re
 
 from openerp import models, api
 
-from openerp.addons.runbot_multiple_hosting import runbot_repo
+from .bitbucket import BitBucketHosting
 
 import logging
 
@@ -65,8 +65,3 @@ class RunbotRepo(models.Model):
 
             return hosting.get_pull_request(owner, repository, pull_number)
 
-
-    @bitbucket
-    @api.one
-    def get_hosting_instance(self):
-        return BitBucketHosting

@@ -23,6 +23,8 @@ import re
 
 from openerp import models, api
 
+from .github import GithubHosting
+
 import logging
 
 _logger = logging.getLogger(__name__)
@@ -64,8 +66,3 @@ class RunbotRepo(models.Model):
             hosting = GithubHosting((self.username, self.password))
 
             return hosting.get_pull_request(owner, repository, pull_number)
-
-    @github
-    @api.one
-    def get_hosting_instance(self):
-        return GithubHosting

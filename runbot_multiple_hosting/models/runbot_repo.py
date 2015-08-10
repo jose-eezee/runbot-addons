@@ -63,7 +63,3 @@ class RunbotRepo(models.Model):
     @api.multi
     def get_pull_request(self, pull_number):
         raise NotImplementedError("Should have implemented this")
-
-    @api.one
-    def get_hosting_instance(self):
-        raise NotImplementedError("Should have implemented this")
