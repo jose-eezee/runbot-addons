@@ -20,7 +20,6 @@
                     <field name="hosting"/>
                     <field name="username"/>
                     <field name="password"/>
-                    <field name="visible"/>
                 </field>
 
             </field>

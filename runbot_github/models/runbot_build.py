@@ -44,7 +44,7 @@ def github(func):
 class RunbotBuild(models.Model):
     _inherit = "runbot.build"
 
-    @api.github
+    @github
     @api.multi
     def github_status(self):
         return runbot_build.github_status()

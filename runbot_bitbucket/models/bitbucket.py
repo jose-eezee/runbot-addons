@@ -1,4 +1,4 @@
-from openerp.addons.runbot_multiple_hosting import hosting
+from openerp.addons.runbot_multiple_hosting.models import hosting
 
 class BitBucketHosting(hosting.Hosting):
     API_URL = 'https://bitbucket.org/api/2.0'

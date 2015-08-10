@@ -19,12 +19,9 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-import requests
-import re
-import os
-import urlparse
-
 from openerp import models, api, fields
+
+from .bitbucket import BitBucketHosting
 
 import logging
 
@@ -48,7 +45,7 @@ def bitbucket(func):
 class RunbotBranch(models.Model):
     _inherit = "runbot.branch"
 
-    @api.bitbucket
+    @bitbucket
     @api.multi
     def _get_pull_info(self):
         self.ensure_one()
@@ -58,10 +55,10 @@ class RunbotBranch(models.Model):
             return repo.get_pull_request(pull_number) or {}
         return {}
 
-    @api.one
+    @api.multi
     def get_pull_request_url(self, owner, repository, branch):
-        raise NotImplementedError("Should have implemented this")
+        return BitBucketHosting.get_pull_request_url(owner, repository, branch)
 
-    @api.one
+    @api.multi
     def get_branch_url(self, owner, repository, pull_number):
-        raise NotImplementedError("Should have implemented this")
+        return BitBucketHosting.get_branch_url(owner, repository, pull_number)

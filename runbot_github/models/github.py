@@ -1,4 +1,4 @@
-from openerp.addons.runbot_multiple_hosting import hosting
+from openerp.addons.runbot_multiple_hosting.models import hosting
 
 class GithubHosting(hosting.Hosting):
     API_URL = 'https://api.github.com'
