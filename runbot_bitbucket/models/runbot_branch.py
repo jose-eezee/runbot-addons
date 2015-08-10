@@ -32,28 +32,28 @@ _logger = logging.getLogger(__name__)
 _logger.setLevel(logging.DEBUG)
 
 
-def is_pull_request(branch):
-    return re.match('^\d+$', branch) is not None
+def bitbucket(func):
+    """Decorator for functions which should be overwritten only if
+    this repo is bitbucket-.
+    """
+    def bitbucket(self, *args, **kwargs):
+        if self.repo_id.hosting == 'bitbucket':
+            return func(self, *args, **kwargs)
+        else:
+            regular_func = getattr(super(RunbotBranch, self), func.func_name)
+            return regular_func(*args, **kwargs)
+    return bitbucket
 
 
 class RunbotBranch(models.Model):
     _inherit = "runbot.branch"
 
-    @api.multi
-    def _get_branch_url(self, field_name, arg):
-        r = {}
-
-        for branch in self:
-            owner, repository = branch.repo_id.base.split('/')[1:]
-            mapping = branch.repo_id.get_hosting_instance()
-
-            if is_pull_request(branch.branch_name):
-                r[branch.id] = mapping.get_pull_request_url(owner, repository, branch.branch_name)
-            else:
-                r[branch.id] = mapping.get_branch_url(owner, repository, branch.branch_name)
-
-        return r
-
+    @api.bitbucket
     @api.multi
     def _get_pull_info(self):
-        raise NotImplementedError("Should have implemented this")
+        self.ensure_one()
+        repo = self.repo_id
+        if repo.username and repo.password and self.name.startswith('refs/pull/'):
+            pull_number = self.name[len('refs/pull/'):]
+            return repo.get_pull_request_branch('/repos/:owner/:repo/pulls/%s' % pull_number) or {}
+        return {}

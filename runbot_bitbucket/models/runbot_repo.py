@@ -31,6 +31,19 @@ _logger = logging.getLogger(__name__)
 _logger.setLevel(logging.DEBUG)
 
 
+def bitbucket(func):
+    """Decorator for functions which should be overwritten only if
+    this repo is bitbucket-.
+    """
+    def bitbucket(self, *args, **kwargs):
+        if self.hosting == 'bitbucket':
+            return func(self, *args, **kwargs)
+        else:
+            regular_func = getattr(super(RunbotRepo, self), func.func_name)
+            return regular_func(*args, **kwargs)
+    return bitbucket
+
+
 class BitBucketHosting(runbot_repo.Hosting):
     API_URL = 'https://bitbucket.org/api/2.0'
     URL = 'https://bitbucket.org'
@@ -41,19 +54,12 @@ class BitBucketHosting(runbot_repo.Hosting):
     def get_pull_request(self, owner, repository, pull_number):
         url = self.get_api_url('/repositories/%s/%s/pullrequests/%s' % (owner, repository, pull_number))
         reponse = self.session.get(url)
-        return response.json()
+        return reponse.json()
 
     def get_pull_request_branch(self, owner, repository, pull_number):
         pr = self.get_pull_request(owner, repository, pull_number)
         return pr['source']['branch']['name']
 
-    @classmethod
-    def get_branch_url(cls, owner, repository, branch):
-        return cls.get_url('/%s/%s/branch/%s', owner, repository, branch)
-
-    @classmethod
-    def get_pull_request_url(cls, owner, repository, pull_number):
-        return cls.get_url('/%s/%s/pull-request/%s', owner, repository, pull_number)
 
 
 class RunbotRepo(models.Model):
@@ -65,34 +71,22 @@ class RunbotRepo(models.Model):
 
         result.append(('bitbucket', 'Bitbucket'))
 
+    @bitbucket
     @api.multi
     def get_pull_request_branch(self, pull_number):
-        for repo in self:
-            match = re.search('([^/]+)/([^/]+)/([^/.]+(.git)?)', repo.base)
-
-            if match:
-                owner = match.group(2)
-                repository = match.group(3)
-
-                if repo.hosting == 'bitbucket':
-                    hosting = BitBucketHosting((repo.username, repo.password))
-                else:
-                    return super(RunbotRepo, self).get_pull_request_branch(pull_number)
-
-                return hosting.get_pull_request_branch(owner, repository, pull_number)
-
-    @api.mutli
-    def update_status_on_commit(self, commit_hash, status):
         self.ensure_one()
-        for repo in self:
+        match = re.search('([^/]+)/([^/]+)/([^/.]+(.git)?)', self.base)
 
-            match = re.search('([^/]+)/([^/]+)/([^/.]+(.git)?)', repo.base)
+        if match:
+            owner = match.group(2)
+            repository = match.group(3)
 
-            if not match:
-                return
+            hosting = BitBucketHosting((self.username, self.password))
 
-            if repo.hosting == 'bitbucket':
-                return
-            else:
-                return super(RunbotRepo, self).update_status_on_commit(commit_hash, status)
+            return hosting.get_pull_request_branch(owner, repository, pull_number)
 
+
+    @bitbucket
+    @api.one
+    def get_hosting_instance(self):
+        return BitBucketHosting

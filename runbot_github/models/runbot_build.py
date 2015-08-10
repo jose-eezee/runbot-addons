@@ -19,41 +19,32 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-import requests
-import re
-import os
-import urlparse
-
 from openerp import models, api, fields
+
+from openerp.addons.runbot.runbot import runbot_build
 
 import logging
 
 _logger = logging.getLogger(__name__)
 _logger.setLevel(logging.DEBUG)
 
+def github(func):
+    """Decorator for functions which should be overwritten only if
+    this repo is bitbucket-.
+    """
+    def github(self, *args, **kwargs):
+        if self.repo_id.hosting == 'github':
+            return func(self, *args, **kwargs)
+        else:
+            regular_func = getattr(super(RunbotBuild, self), func.func_name)
+            return regular_func(*args, **kwargs)
+    return github
 
-def is_pull_request(branch):
-    return re.match('^\d+$', branch) is not None
 
+class RunbotBuild(models.Model):
+    _inherit = "runbot.build"
 
-class RunbotBranch(models.Model):
-    _inherit = "runbot.branch"
-
+    @api.github
     @api.multi
-    def _get_branch_url(self, field_name, arg):
-        r = {}
-
-        for branch in self:
-            owner, repository = branch.repo_id.base.split('/')[1:]
-            mapping = branch.repo_id.get_hosting_instance()
-
-            if is_pull_request(branch.branch_name):
-                r[branch.id] = mapping.get_pull_request_url(owner, repository, branch.branch_name)
-            else:
-                r[branch.id] = mapping.get_branch_url(owner, repository, branch.branch_name)
-
-        return r
-
-    @api.multi
-    def _get_pull_info(self):
-        raise NotImplementedError("Should have implemented this")
+    def github_status(self):
+        return runbot_build.github_status()

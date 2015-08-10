@@ -32,44 +32,6 @@ _logger = logging.getLogger(__name__)
 _logger.setLevel(logging.DEBUG)
 
 
-def get_base(url):
-    """
-    Return the hostname and the path for the following patterns:
-        get_base('git@github.com:odoo/odoo.git') == 'github.com/odoo/odoo'
-        get_base('http://github.com/odoo/odoo.git') == 'github.com/odoo/odoo'
-        get_base('https://github.com/odoo/odoo.git') == 'github.com/odoo/odoo'
-        get_base('github.com/odoo/odoo.git') == 'github.com/odoo/odoo'
-    """
-    if url.startswith('git@'):
-        hostname, path = url.split(':')
-        _, hostname = hostname.split('@')
-        parsed_url = urlparse.urlparse(urlparse.urlunsplit(('https', hostname, path, '', '')))
-
-    else:
-        if startswith(url, ('http://', 'https://')):
-            parsed_url = urlparse.urlparse(url)
-        else:
-            if '://' in url:
-                raise SchemeNotSupported()
-
-            parsed_url = urlparse.urlparse('https://' + url)
-
-    def is_bare_repository(url):
-        return url.path.endswith('.git')
-
-    if is_bare_repository(parsed_url):
-        path, _ = os.path.splitext(parsed_url.path)
-        tmp_url = urlparse.urlunsplit((parsed_url.scheme, parsed_url.netloc, path, '', ''))
-        parsed_url = urlparse.urlparse(tmp_url)
-
-    if parsed_url.path.endswith('/'):
-        path = parsed_url.path[:-1]
-    else:
-        path = parsed_url.path
-
-    return '%s%s' % (parsed_url.hostname, path,)
-
-
 class Hosting(object):
     def __init__(self, token):
         self.session = requests.Session()
@@ -85,7 +47,16 @@ class Hosting(object):
         return '%s%s' % (cls.URL, tmp_endpoint)
 
     def update_status_on_commit(self, owner, repository, commit_hash, status):
-        raise NotImplemented()
+        raise NotImplementedError("Should have implemented this")
+
+
+class RunbotRepoDep(models.Model):
+    _name = 'runbot.repo.dep'
+
+    repo_src_id = fields.Many2one('runbot.repo', string='Repository', required=True, ondelete='cascade')
+    repo_dst_id = fields.Many2one('runbot.repo', string='Repository', required=True, ondelete='cascade')
+    reference = fields.Char('Reference', required=True, default="refs/heads/master")
+
 
 class RunbotRepo(models.Model):
     _inherit = "runbot.repo"
@@ -106,11 +77,12 @@ class RunbotRepo(models.Model):
     username = fields.Char('Username')
     password = fields.Char('Password')
     visible = fields.Boolean('Visible on the web interface of Runbot')
+    dependency_nested_ids = fields.One2many('runbot.repo.dep', 'repo_src_id', string='Nested Dependency')
 
     @api.multi
     def get_pull_request_branch(self, pull_number):
         raise NotImplementedError("Should have implemented this")
 
-    @api.mutli
-    def update_status_on_commit(self, commit_hash, status):
+    @api.one
+    def get_hosting_instance(self):
         raise NotImplementedError("Should have implemented this")

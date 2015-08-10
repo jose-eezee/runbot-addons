@@ -31,6 +31,19 @@ _logger = logging.getLogger(__name__)
 _logger.setLevel(logging.DEBUG)
 
 
+def github(func):
+    """Decorator for functions which should be overwritten only if
+    this repo is bitbucket-.
+    """
+    def github(self, *args, **kwargs):
+        if self.hosting == 'github':
+            return func(self, *args, **kwargs)
+        else:
+            regular_func = getattr(super(RunbotRepo, self), func.func_name)
+            return regular_func(*args, **kwargs)
+    return github
+
+
 class GithubHosting(runbot_repo.Hosting):
     API_URL = 'https://api.github.com'
     URL = 'https://github.com'
@@ -54,14 +67,6 @@ class GithubHosting(runbot_repo.Hosting):
         url = self.get_api_url('/repos/%s/%s/statuses/%s' % (owner, repository, commit_hash))
         self.session.post(url, status)
 
-    @classmethod
-    def get_branch_url(cls, owner, repository, branch):
-        return cls.get_url('/%s/%s/tree/%s', owner, repository, branch)
-
-    @classmethod
-    def get_pull_request_url(cls, owner, repository, pull_number):
-        return cls.get_url('/%s/%s/pull/%s', owner, repository, pull_number)
-
 
 class RunbotRepo(models.Model):
     _inherit = "runbot.repo"
@@ -72,36 +77,21 @@ class RunbotRepo(models.Model):
 
         result.append(('github', 'GitHub'))
 
+    @github
     @api.multi
     def get_pull_request_branch(self, pull_number):
-        for repo in self:
-            match = re.search('([^/]+)/([^/]+)/([^/.]+(.git)?)', repo.base)
+        self.ensure_one()
+        match = re.search('([^/]+)/([^/]+)/([^/.]+(.git)?)', self.base)
 
-            if match:
-                owner = match.group(2)
-                repository = match.group(3)
-
-                if repo.hosting == 'bitbucket':
-                    hosting = GithubHosting((repo.username, repo.password))
-                else:
-                    return super(RunbotRepo, self).get_pull_request_branch(pull_number)
-
-                return hosting.get_pull_request_branch(owner, repository, pull_number)
-
-    @api.mutli
-    def update_status_on_commit(self, commit_hash, status):
-        for repo in self:
-
-            match = re.search('([^/]+)/([^/]+)/([^/.]+(.git)?)', repo.base)
-
-            if not match:
-                return
-
+        if match:
             owner = match.group(2)
             repository = match.group(3)
 
-            if repo.hosting == 'github':
-                hosting = GithubHosting(repo.token)
-                return hosting.update_status_on_commit(owner, repository, commit_hash, status)
-            else:
-                return super(RunbotRepo, self).update_status_on_commit(commit_hash, status)
+            hosting = GithubHosting((self.username, self.password))
+
+            return hosting.get_pull_request_branch(owner, repository, pull_number)
+
+    @github
+    @api.one
+    def get_hosting_instance(self):
+        return GithubHosting
