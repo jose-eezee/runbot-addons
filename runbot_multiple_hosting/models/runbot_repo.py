@@ -55,7 +55,7 @@ class RunbotRepo(models.Model):
         hosting = []
         return hosting
 
-    hosting = fields.Selection(_get_hosting, string='Hosting', required=True)
+    hosting = fields.Selection('_get_hosting', string='Hosting', required=True)
     username = fields.Char('Username')
     password = fields.Char('Password')
     dependency_nested_ids = fields.One2many('runbot.repo.dep', 'repo_src_id', string='Nested Dependency')

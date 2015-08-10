@@ -23,6 +23,8 @@ import re
 
 from openerp import models, api
 
+from openerp.addons.runbot_multiple_hosting.models import runbot_repo
+
 from .github import GithubHosting
 
 import logging
@@ -44,7 +46,7 @@ def github(func):
     return github
 
 
-class RunbotRepo(models.Model):
+class RunbotRepo(runbot_repo.RunbotRepo):
     _inherit = "runbot.repo"
 
     @api.model
@@ -52,6 +54,7 @@ class RunbotRepo(models.Model):
         result = super(RunbotRepo, self)._get_hosting()
 
         result.append(('github', 'GitHub'))
+        return result
 
     @github
     @api.multi

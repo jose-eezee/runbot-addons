@@ -52,6 +52,7 @@ class RunbotRepo(models.Model):
         result = super(RunbotRepo, self)._get_hosting()
 
         result.append(('bitbucket', 'Bitbucket'))
+        return result
 
     @bitbucket
     def get_pull_request(self, pull_number):
