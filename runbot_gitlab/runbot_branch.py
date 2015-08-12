@@ -44,18 +44,20 @@ class RunbotBranch(models.Model):
     def is_pull_request(self):
         self.ensure_one()
 
-        return self.merge_request_id is not None
+        if self.merge_request_id:
+            return True
+        return False
 
     @api.multi
     @gitlab_api
-    def get_pull_request_url(self):
+    def get_pull_request_url(self, owner, repository, branch):
         self.ensure_one()
 
         return "https://%s/merge_requests/%s" % (self.repo_id.base, self.merge_request_id)
 
     @api.multi
     @gitlab_api
-    def get_branch_url(self):
+    def get_branch_url(self, owner, repository, pull_number):
         self.ensure_one()
 
         return "https://%s/tree/%s" % (self.repo_id.base, self.branch_name)

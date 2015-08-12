@@ -37,21 +37,16 @@ class RunbotBranch(models.Model):
         return re.match('^\d+$', self.branch_name) is not None
 
     @api.multi
-    def _get_branch_url(self, field_name, arg):
-        r = {}
-
+    def _get_branch_url(self):
         for branch in self:
             owner, repository = branch.repo_id.base.split('/')[1:]
 
             if branch.is_pull_request():
-                # The API one return
-                r[branch.id] = branch.get_pull_request_url(owner, repository, branch.branch_name)
+                branch.branch_url = branch.get_pull_request_url(owner, repository, branch.branch_name)
             else:
-                r[branch.id] = branch.get_branch_url(owner, repository, branch.branch_name)
+                branch.branch_url = branch.get_branch_url(owner, repository, branch.branch_name)
 
-        return r
-
-    # branch_url = fields.Char('Branch url', compute='_get_branch_url', readonly=1),
+    branch_url = fields.Char('Branch url', compute='_get_branch_url', readonly=1)
 
     @api.multi
     def _get_pull_info(self):
