@@ -19,8 +19,19 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
+from openerp import models, fields, api
 
-from openerp import models, fields
+def gitlab_api(func):
+    """Decorator for functions which should be overwritten only if
+    uses_gitlab is enabled in repo.
+    """
+    def gitlab_func(self, *args, **kwargs):
+        if self.repo_id.hosting == 'gitlab':
+            return func(self, *args, **kwargs)
+        else:
+            regular_func = getattr(super(RunbotBranch, self), func.func_name)
+            return regular_func(*args, **kwargs)
+    return gitlab_func
 
 
 class RunbotBranch(models.Model):
@@ -28,25 +39,34 @@ class RunbotBranch(models.Model):
     project_id = fields.Integer('VCS Project', select=1)
     merge_request_id = fields.Integer('Merge Request', select=1)
 
-    def _get_branch_url(self, cr, uid, ids, field_name, arg, context=None):
-        """For gitlab branches get gitlab MR formatted branches
+    @api.multi
+    @gitlab_api
+    def is_pull_request(self):
+        self.ensure_one()
 
-        If not an MR (such as a main branch or github repo) call super
-        function
-        """
-        r = {}
-        other_branch_ids = []
-        for branch in self.browse(cr, uid, ids, context=context):
-            if branch.merge_request_id:
-                r[branch.id] = "https://%s/merge_requests/%s" % (
-                    branch.repo_id.base,
-                    branch.merge_request_id,
-                )
-            else:
-                other_branch_ids.append(branch.id)
-        r.update(
-            super(RunbotBranch, self)._get_branch_url(
-                cr, uid, other_branch_ids, field_name, arg, context=context
-            )
-        )
-        return r
+        return self.merge_request_id is not None
+
+    @api.multi
+    @gitlab_api
+    def get_pull_request_url(self):
+        self.ensure_one()
+
+        return "https://%s/merge_requests/%s" % (self.repo_id.base, self.merge_request_id)
+
+    @api.multi
+    @gitlab_api
+    def get_branch_url(self):
+        self.ensure_one()
+
+        return "https://%s/tree/%s" % (self.repo_id.base, self.branch_name)
+
+    @api.multi
+    @gitlab_api
+    def _get_pull_info(self):
+        self.ensure_one()
+        repo = self.repo_id
+        if repo.token and repo.name.startswith('refs/pull/'):
+            pull_number = repo.name[len('refs/pull/'):]
+            return repo.github('/repos/:owner/:repo/pulls/%s' % pull_number, ignore_errors=True) or {}
+
+        return {}

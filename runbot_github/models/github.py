@@ -25,9 +25,10 @@ class GithubHosting(hosting.Hosting):
     URL = 'https://github.com'
 
     def __init__(self, credentials):
-        token = (credentials, 'x-oauth-basic')
-        super(GithubHosting, self).__init__(token)
+        super(GithubHosting, self).__init__()
 
+        token = (credentials, 'x-oauth-basic')
+        self.session.auth = token
         self.session.headers.update({'Accept': 'application/vnd.github.she-hulk-preview+json'})
 
     @classmethod

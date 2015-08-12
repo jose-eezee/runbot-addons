@@ -55,14 +55,15 @@ class RunbotBranch(models.Model):
         return {}
 
     @api.multi
+    @github
     def get_pull_request_url(self, owner, repository, branch):
         self.ensure_one()
 
         return GithubHosting.get_pull_request_url(owner, repository, branch)
 
     @api.multi
+    @github
     def get_branch_url(self, owner, repository, pull_number):
         self.ensure_one()
 
         return GithubHosting.get_branch_url(owner, repository, pull_number)
-        raise NotImplementedError("Should have implemented this")

@@ -16,6 +16,10 @@
                     </field>
                 </field>
 
+                <field name="token" position="attributes">
+                    <attribute name="string">API Token</attribute>
+                </field>
+
                 <field name="modules_auto" position="after">
                     <field name="hosting"/>
                     <field name="username"/>

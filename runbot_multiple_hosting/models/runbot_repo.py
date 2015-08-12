@@ -18,10 +18,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-import requests
 import re
-import os
-import urlparse
 
 from openerp import models, api, fields
 
@@ -42,11 +39,32 @@ class RunbotRepoDep(models.Model):
 class RunbotRepo(models.Model):
     _inherit = "runbot.repo"
 
+    @api.multi
+    def _get_base(self):
+        for repo in self:
+            name = re.sub('.+@', '', repo.name)
+            name = re.sub('.git$', '', name)
+            name = re.sub('https?:?\/\/', '', name)
+            name = name.replace(':','/')
+            repo.base = name
+
     hosting = fields.Selection([], string='Hosting', required=True)
     username = fields.Char('Username')
     password = fields.Char('Password')
     dependency_nested_ids = fields.One2many('runbot.repo.dep', 'repo_src_id', string='Nested Dependency')
+    base = fields.Char('Base URL', compute=_get_base, readonly=True)
 
     @api.multi
     def get_pull_request(self, pull_number):
         raise NotImplementedError("Should have implemented this")
+
+    @api.onchange('name')
+    def onchange_repository(self):
+        if self.hosting or not self.name:
+            return
+
+        hosting_list = [hosting[0] for hosting in self._columns['hosting'].selection]
+        for hosting in hosting_list:
+            if hosting in self.name:
+                self.hosting = hosting
+                return

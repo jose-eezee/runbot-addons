@@ -18,10 +18,7 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-import requests
 import re
-import os
-import urlparse
 
 from openerp import models, api, fields
 
@@ -31,12 +28,13 @@ _logger = logging.getLogger(__name__)
 _logger.setLevel(logging.DEBUG)
 
 
-def is_pull_request(branch):
-    return re.match('^\d+$', branch) is not None
-
-
 class RunbotBranch(models.Model):
     _inherit = "runbot.branch"
+
+    @api.multi
+    def is_pull_request(self):
+        self.ensure_one()
+        return re.match('^\d+$', self.branch_name) is not None
 
     @api.multi
     def _get_branch_url(self, field_name, arg):
@@ -45,13 +43,15 @@ class RunbotBranch(models.Model):
         for branch in self:
             owner, repository = branch.repo_id.base.split('/')[1:]
 
-            if is_pull_request(branch.branch_name):
+            if branch.is_pull_request():
                 # The API one return
                 r[branch.id] = branch.get_pull_request_url(owner, repository, branch.branch_name)
             else:
                 r[branch.id] = branch.get_branch_url(owner, repository, branch.branch_name)
 
         return r
+
+    # branch_url = fields.Char('Branch url', compute='_get_branch_url', readonly=1),
 
     @api.multi
     def _get_pull_info(self):

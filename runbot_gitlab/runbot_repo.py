@@ -77,7 +77,7 @@ def gitlab_api(func):
     uses_gitlab is enabled in repo.
     """
     def gitlab_func(self, *args, **kwargs):
-        if self.uses_gitlab:
+        if self.hosting == 'gitlab':
             return func(self, *args, **kwargs)
         else:
             regular_func = getattr(super(RunbotRepo, self), func.func_name)
@@ -146,28 +146,31 @@ def set_gitlab_ci_conf(token, gitlab_url, runbot_domain, repo_id):
 
 class RunbotRepo(models.Model):
     _inherit = "runbot.repo"
-    uses_gitlab = fields.Boolean('Use Gitlab')
+    hosting = fields.Selection(selection_add=[('gitlab', 'Gitlab')])
 
     @api.model
     def create(self, vals):
         repo_id = super(RunbotRepo, self).create(vals)
-        set_gitlab_ci_conf(
-            vals.get('token'),
-            vals.get('name'),
-            self.domain(),
-            repo_id.id,
-        )
+        if vals.get('hosting') == 'gitlab':
+            set_gitlab_ci_conf(
+                vals.get('token'),
+                vals.get('name'),
+                self.domain(),
+                repo_id.id,
+            )
         return repo_id
 
     @api.multi
     def write(self, vals):
         super(RunbotRepo, self).write(vals)
-        set_gitlab_ci_conf(
-            vals.get('token', self.token),
-            vals.get('name', self.name),
-            self.domain(),
-            self.id,
-        )
+        for repo in self:
+            if repo.hosting == 'gitlab':
+                set_gitlab_ci_conf(
+                    vals.get('token', self.token),
+                    vals.get('name', self.name),
+                    self.domain(),
+                    self.id,
+                )
 
     @api.one
     @gitlab_api
@@ -201,7 +204,7 @@ class RunbotRepo(models.Model):
             source_project = get_gitlab_project(
                 self.base, self.token, mr.source_project_id
             )
-            source_branch = source_project.branch(name=mr.source_branch)
+            source_branch = source_project.branch(mr.source_branch)
             commit = source_branch.commit
             sha = commit['id']
             date = commit['committed_date']

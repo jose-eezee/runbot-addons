@@ -37,13 +37,12 @@ Contributors
 ------------
 * Sandy Carter (sandy.carter@savoirfairelinux.com)
 """,
-    'author': "Savoir-faire Linux,Odoo Community Association (OCA)",
-    'depends': ['runbot'],
+    'author': "Savoir-faire Linux,Odoo Community Association (OCA),Eezee-It",
+    'depends': ['runbot', 'runbot_multiple_hosting'],
     'external_dependencies': {
         'python': ['gitlab3', ]
     },
     'data': [
-        'runbot_repo_view.xml',
     ],
     'installable': True,
 }

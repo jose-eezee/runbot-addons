@@ -23,7 +23,7 @@ import requests
 
 
 class Hosting(object):
-    def __init__(self, token):
+    def __init__(self):
         self.session = requests.Session()
 
     @classmethod
