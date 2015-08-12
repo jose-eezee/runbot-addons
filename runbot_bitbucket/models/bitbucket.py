@@ -28,8 +28,7 @@ class BitBucketHosting(hosting.Hosting):
     token = (())
 
     def __init__(self, credentials):
-        auth = ('JAFMQPQs4BkT7KQubr','JE54xLmGDFLGqvjKbvKn3NBGGaVAPEC7')
-        response = requests.post(self.URL + '/site/oauth2/access_token', auth=auth,
+        response = requests.post(self.URL + '/site/oauth2/access_token', auth=credentials,
                                  data={'grant_type':'client_credentials'})
         self.token = response.json().get('access_token')
         super(BitBucketHosting, self).__init__()
