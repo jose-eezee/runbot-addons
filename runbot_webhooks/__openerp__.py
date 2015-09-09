@@ -31,6 +31,7 @@
     'depends': ['runbot_bitbucket'],
     'data': [
         'views/runbot_webhook.xml',
+        'views/runbot_cron.xml',
     ],
     'installable': True,
 }

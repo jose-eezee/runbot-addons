@@ -18,18 +18,4 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ##############################################################################
-
-import re
-from openerp import http
-from openerp.http import request
-from openerp import SUPERUSER_ID
-from openerp.tools.translate import _
-
-
-class WebHookListener(http.Controller):
-
-    @http.route(['/webhook/receive_signal'], type='http', auth="public",
-                website=True)
-    def receive_signal(self, **post):
-
-        return True
+import runbot_webhooks
