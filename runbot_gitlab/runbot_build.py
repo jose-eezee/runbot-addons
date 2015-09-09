@@ -47,5 +47,6 @@ class RunbotBuild(orm.Model):
         return r
 
     _columns = {
-        'dest': fields.function(_get_dest, type='char', string='Dest', readonly=1, store=True),
+        'dest': fields.function(
+            _get_dest, type='char', string='Dest', readonly=1, store=True)
     }

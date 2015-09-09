@@ -91,8 +91,7 @@ class RunbotBuild(models.Model):
         for build in self:
             hint_branches = set()
             for extra_repo in build.repo_id.dependency_ids:
-                closest_name = build.get_closest_branch_name(
-                    extra_repo.id, hint_branches)
+                closest_name = build._get_closest_branch_name(extra_repo.id)[1]
                 hint_branches.add(closest_name)
                 repo_branch_data[extra_repo.id] = closest_name
             repo_branch_data[build.repo_id.id] = build.name
@@ -157,6 +156,10 @@ class RunbotBuild(models.Model):
         if not modules_to_check_pylint:
             build._log('pylint_script', 'No modules to check pylint found')
             return None
+
+        build._log('pylint_script', "Modules set for pylint check: %s" %
+                   ', '.join(modules_to_check_pylint))
+
         fname_pylint_run_sh = os.path.join(build.path(),
                                            'pylint_run.sh')
         with open(fname_pylint_run_sh, "w") as f_pylint_run_sh:
@@ -228,9 +231,9 @@ class RunbotBuild(models.Model):
                 count += 1
                 if count >= MAX_LOG_LINES:
                     build._log(
-                        'pylint_script', 'pylint have more than'
-                        ' ' + MAX_LOG_LINES + ' errors.'
-                        ' Please check pylint full log file...')
+                        'pylint_script', 'pylint have more than %d '
+                        'errors. '
+                        'Please check pylint full log file...' % MAX_LOG_LINES)
                     break
             if build.result == "ok":
                 build.write({'result': 'warn'})
