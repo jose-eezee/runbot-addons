@@ -2,7 +2,8 @@
 <openerp>
     <data>
         <!-- Cron Disabled-->
-        <record model="ir.cron" id="runbot.repo_cron">
+        <delete model="ir.cron" id="runbot.repo_cron"/>
+        <record model="ir.cron" id="repo_cron">
             <field name='name'>Runbot Cron</field>
             <field name='active' eval="False"/>
             <field name='interval_number'>1</field>

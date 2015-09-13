@@ -19,12 +19,10 @@
 #
 ##############################################################################
 
-import re
 import logging
 from openerp import http
 from openerp.http import request
 from openerp import SUPERUSER_ID
-from openerp.tools.translate import _
 
 _logger = logging.getLogger(__name__)
 _logger.setLevel(logging.DEBUG)
@@ -34,15 +32,32 @@ class WebHookListener(http.Controller):
 
     @http.route('/webhook/receive_signal', type='json', auth="none")
     def receive_signal(self, req):
+        '''This function receive the webhook signal form bitbucket and
+        create the necessaries variables for search and run the cron.
+        :param req: The jsonrequest from bitbucket webhook.
+        :return: a empty dict
+        '''
+
         cr, uid, context, pool = request.cr, request.uid, request.context, request.registry
+        #Get the jsonsignal
         json_dict = req.jsonrequest
-        print json_dict
-        _logger.debug("Create new PR from %s", json_dict['pullrequest']['source']['branch']['name'])
-        _logger.debug("In repository %s", json_dict['pullrequest']['source']['repository']['full_name'])
-        _logger.debug("For commit %s", json_dict['pullrequest']['source']['commit']['hash'])
-        _logger.debug("git@bitbucket.org:%s.git", json_dict['pullrequest']['source']['repository']['full_name'])
-        resp = request.env['runbot.repo'].sudo().search([('name', '=', 'git@bitbucket.org:%s.git' % json_dict['pullrequest']['source']['repository']['full_name'])])
-        print resp
-        context.update({'prbranch':json_dict['pullrequest']['source']['branch']['name']})
+        #Pull request's branch
+        branch = json_dict['pullrequest']['source']['branch']['name']
+        #Pull request's repository
+        repository = json_dict['pullrequest']['source']['repository']['full_name']
+        #Pull request's commmit
+        commit = json_dict['pullrequest']['source']['commit']['hash']
+        #Information log
+        _logger.info("Create new PR from %s", branch)
+        _logger.info("In repository %s", repository)
+        _logger.info("For commit %s", commit)
+        _logger.info("git@bitbucket.org:%s.git", repository)
+
+        domain = [('name', '=', 'git@bitbucket.org:%s.git' % repository)]
+        resp = request.env['runbot.repo'].sudo().search(domain)
+        #Context variable used by the cron for create the branch and build the new instance
+        context.update({'pr_branch': branch})
+        #Running the cron
         pool.get('runbot.repo').cron(cr, SUPERUSER_ID, [resp.id], context=context)
+
         return {}
